@@ -1,0 +1,20 @@
+[comment encoding = UTF-8 /]
+[**
+ * The documentation of the module.
+ */]
+[module utilityServices('http://www.eclipse.org/uml2/5.0.0/Types', 'http://www.eclipse.org/uml2/5.0.0/UML', 'http://www.eclipse.org/uml2/5.0.0/UML/Profile/Standard')/]
+
+[**
+ * Get current time from Java service.
+ */]
+[query public getCurrentTime(anOclAny : OclAny) : String
+	=  invoke( 'ucmis.m2t.service.utilityServices', 'getCurrentTime()', Sequence{} )
+/]
+
+[query public getXmiId(anElement : OclAny) : String
+	=  invoke( 'ucmis.m2t.service.utilityServices', 'getXmiId(org.eclipse.emf.ecore.EModelElement)', Sequence{ anElement } )
+/]
+
+[query public allProperties(anOclAny : OclAny) : Sequence(Sequence(String) )
+	=  invoke( 'ucmis.m2t.service.utilityServices', 'allProperties()', Sequence{} )
+/]

@@ -1,0 +1,757 @@
+[comment encoding = UTF-8 /]
+[**
+ * Module contains all additional model queries. Their names start with "e_".
+ */]
+[module modelQuery('http://www.eclipse.org/uml2/5.0.0/Types', 'http://www.eclipse.org/uml2/5.0.0/UML', 'http://www.eclipse.org/uml2/5.0.0/UML/Profile/Standard')]
+
+[**
+ * Returns a sequence of all classes of the model, sorted by class name.
+ * @param aClass An object of type model.
+ */]
+[query public e_allClasses( aModel : Model ) : Sequence(Class) =
+	aModel.eAllContents(Class)->sortedBy(name) /]
+
+[**
+ * Returns a sequence of all data types, sorted by data type name.
+ * @param aClass An object of type model.
+ */]
+[query public e_allDataTypes( aModel : Model ) : Sequence(DataType) =
+	aModel.eAllContents(DataType)->sortedBy(name) /]
+
+[**
+ * Returns a sequence of all enumerations, sorted by enumeration name.
+ * @param aClass An object of type model.
+ */]
+[query public e_allEnumerations( aModel : Model ) : Sequence(Enumeration) =
+	aModel.eAllContents(Enumeration)->sortedBy(name) /]
+
+[**
+ * Returns a sequence of all packages, sorted by package name.
+ * @param aClass An object of type model.
+ */]
+[query public e_allPackages( aModel : Model ) : Sequence(Package) =
+	aModel.eAllContents(Package)->sortedBy(name) /]
+
+[**
+ * Returns a sequence of all abstraction clients, sorted by client name.
+ * @param aClass An object of type model.
+ */]
+[query public e_allAbstractionClients( aModel : Model ) : Sequence(Class) =
+	aModel.eAllContents(Abstraction).client->sortedBy(name) /]
+
+[**
+ * Returns a sequence of all abstraction suppliers, sorted by supplier name.
+ * @param aClass An object of type model.
+ */]
+[query public e_allAbstractionSuppliers( aModel : Model ) : Sequence(Class) =
+	aModel.eAllContents(Abstraction).supplier->sortedBy(name) /]
+
+[**
+ * Returns a sequence of classes which don't inherit from other classes amd are specialized by other classes.
+ * @param aClass An object of type model.
+ */]
+[query public e_allTopSuperClasses( aModel : Model ) : Sequence(Class) =
+	aModel.eAllContents(Class)
+		->select( superClass->isEmpty() )
+    	->select( eInverse(Class)->notEmpty() )
+    	->sortedBy(name)
+/]
+
+[**
+ * Returns a sequence of associations of a class.
+ * @param aClass An object of type class.
+ * ?? simpler with eInverse(Association) ??
+ */]
+[query public e_associations( aClass : Class ) : Sequence(Property) =
+	aClass.eContents(Property)->select(association <> null)
+/]
+
+[**
+ * Returns a sequence of all associations (only from other packages) to a class.
+ * @param aClass An object of type class.
+ * ?? simpler with eInverse(Association) ??
+ */]
+[comment]all properties in the model, if associations, if same class name, if different package name [/comment]
+[query public e_associationsFromOtherPackages( aClass : Class ) : Sequence(Property) =
+	aClass.getModel().eAllContents(Property)
+		->select(association <> null)
+		->select(a | a.type.name = aClass.name)
+		->select(a | a.type._package.name <> aClass._package.name )
+/]
+[comment]      ->select( a | a.association.memberEnd->last().type._package.name <> aClass._package.name )[/comment]
+
+[comment]      ->select(a | a.association.memberEnd->last().type.name = aClass.name)
+      ->select(a | a.association.memberEnd->first().type._package.name <> aClass._package.name )[/comment]
+
+[**
+ * Returns a sequence of associations (only to other packages) of a class.
+ * @param aClass An object of type class.
+ * ?? simpler with eInverse(Association) ??
+ */]
+[query public e_associationsToOtherPackages( aClass : Class ) : Sequence(Property) =
+	aClass.eContents(Property)->select(association <> null)
+		->select( a | a.association.memberEnd->first().type._package.name <> aClass._package.name )
+/]
+
+[**
+ * Returns a sequence of classifier attributes, sorted by attribute name.
+ * Note: Intended for use with classes and data types. It has not been tested with other classifier types.
+ * @param aClass An object of type classifier.
+ */]
+[query public e_attributes( aClassifier : Classifier ) : Sequence(Property) =
+	aClassifier.eContents(Property)->select(name <> null)->sortedBy(name)
+/]
+
+[**
+ * Returns a sequence of the contained classes.
+ * @param aPackage A package object.
+ */]
+[query public e_childrenClasses(aPackage : Package) :	Sequence(Class) =
+	aPackage.eContents(Class)
+/]
+
+[**
+ * Returns a sequence of the contained data types.
+ * @param aPackage A package object.
+ */]
+[query public e_childrenDataTypes(aPackage : Package) : Sequence(DataType) =
+	aPackage.eContents(DataType)
+/]
+
+[**
+ * Returns a sequence of the contained enumerations.
+ * @param aPackage A package object.
+ */]
+[query public e_childrenEnumeration(aPackage : Package) : Sequence(Enumeration) =
+	aPackage.eContents(Enumeration)
+/]
+
+[**
+ * Returns a sequence of the direct children packages.
+ * @param aPackage A package object.
+ */]
+[query public e_childrenPackages(aPackage : Package) : Sequence(Package) =
+	aPackage.eContents(Package)
+/]
+
+[**
+ * Returns the path in the model of the container of the specified element.
+ * @param aNamedElement A named element object (like Class, DataType, Package).
+ * ?? is simpler possible ??
+ */]
+[query public e_containerPath(aNamedElement : NamedElement) : String =
+	aNamedElement.ancestors()
+		->reverse().oclAsType(Package).name
+		->sep('/')->iterate(ch; acc:String = '' | acc+ch)
+/]
+
+[**
+ * Returns a sequence of the packages containing classes
+ * @param aModel A model object.
+ */]
+[query public e_packagesWithClasses(aModel : Model) : Sequence(Package) =
+	aModel.eAllContents(Package)->select( p : Package | p.eContents(Class)->notEmpty() )->sortedBy(name)
+/]
+
+[**
+ * Returns the path of the specified element below the model with "/" as item separator.
+ * @param aNamedElement A named element object (like Class, DataType, Package).
+ */]
+[query public e_path(aNamedElement : NamedElement) : String =
+	aNamedElement.qualifiedName.
+    	replace(aNamedElement.getModel().name.concat('::'), '').
+		replaceAll('::', '/')
+/]
+
+[**
+ * Returns the qualified name of a named element.
+ * @param aNamedElement A named element object (like Class, DataType, Package).
+ * ?? is simpler possible ??
+ */]
+[query public e_containerQualifiedName(aNamedElement : NamedElement) : String =
+	aNamedElement.ancestors()
+		->reverse().oclAsType(Package).name
+		->sep('::')->iterate(ch; acc:String = '' | acc+ch)
+/]
+
+[**
+ * Returns the file name based on the path in the model of the specified element.
+ * @param aNamedElement A named element (like Class, DataType, Package).
+ * @param target The syntax representation target.
+ */]
+[query public e_filePath(aNamedElement : NamedElement, target : String ) : String =
+	if (target = 'doc') then
+		getModel().e_modelShortName().
+			concat('/').
+			concat(target).
+			concat('/').
+			concat( aNamedElement.qualifiedName.replaceAll('::', '/') ).replace(aNamedElement.getModel().name, '_rst')
+	else
+		getModel().e_modelShortName().
+			concat('/').
+			concat(target).
+			concat('/').
+			concat( aNamedElement.qualifiedName.replaceAll('::', '/') )
+	endif
+/]
+
+[query public XXe_filePath(aNamedElement : NamedElement, target : String ) : String =
+	aNamedElement.getModel().name.
+		concat('/').
+		concat(target).
+		concat('/').
+		concat( aNamedElement.qualifiedName.replaceAll('::', '/').replace(aNamedElement.getModel().name, '_rst') )
+/]
+[comment]?? is approach useful for other purposes ??[/comment]
+[query public Xe_filePath(aNamedElement : NamedElement, target : String ) : String =
+	Sequence{aNamedElement.oclAsType(OclAny)}->union( aNamedElement.ancestors() )
+		->reverse().oclAsType(NamedElement).name->sep('/')
+		->iterate(ch; acc:String = aNamedElement.getModel().name.concat('/').concat(target).concat('/') | acc+ch)
+/]
+
+[**
+ * Returns a set of classes which are the generalization stack.
+ * For the approach see: https://www.eclipse.org/forums/index.php/m/649684/?srch=superclasses#msg_649684
+ * ?? this one or e_allSuperclasses ?
+ * @param aClass An object of type class.
+ */]
+[query public e_findSuperClassStack(aClass : Class) : Set(Class) = 
+	if(aClass.superClass->size() = 0) then
+		aClass.superClass
+	else
+		aClass.superClass->asSet()
+			->union(aClass.superClass.e_findSuperClassStack()
+			->flatten()->asSet())
+	endif
+/]
+
+[**
+ * Returns a sequence of classes which don't inherit from other classes amd are specialized by other classes.
+ * @param aPackage A package object.
+ * ?? TODO: remove Identifiable and AnnotatedIdentifiable lines ??
+ */]
+[query public e_topSuperClasses( aPackage : Package ) : Sequence(Class) =
+	aPackage.eAllContents(Class)
+		->select(
+			superClass->isEmpty() or
+			superClass.name->toString() ='Identifiable' or
+			superClass.name->toString() ='AnnotatedIdentifiable'
+			)
+		->select(eInverse(Class)->notEmpty() )
+		->sortedBy(name)
+/]
+
+[**
+ * Returns a sequence of inherited class attributes.
+ * @param aClass An object of type class.
+ */]
+[query public e_inheritedAttributes( aClassifier : Classifier ) : Sequence(Property) =
+	aClassifier.inheritedMember.oclAsType(Property)
+		->select(association = null)
+		->sortedBy(name).oclAsType(Property)
+/]
+
+[**
+ * Returns a sequence of inherited class attributes.
+ * @param aClass An object of type class.
+ */]
+[query public e_inheritedAssociations( aClass : Class ) : Sequence(Association) =
+	aClass.inheritedMember.oclAsType(Property)
+		->select(association <> null)
+		->asSequence()
+/]
+
+[**
+ * Returns a string with the multiplicity of a property.
+ * @param aProperty A property (attribute) object.
+ */]
+[query public e_multiplicity( aProperty : Property ) : String =
+	aProperty.lower.toString().concat('..').concat(aProperty.upper.toString()).replaceAll('-1', '*')
+/]	
+
+[**
+ * Returns a sequence of all superclasses of a class, where the sequence starts at the direct ancestor.
+ * ?? this one or e_findSuperClassStack ??
+ * @param aClass An object of type class.
+ */]
+[query public e_allSuperclasses(aClass : Class) : Sequence(Class) =
+	if ( aClass.superClass->notEmpty() ) then
+		aClass.superClass->asSequence()
+			->union( e_allSuperclasses( aClass.superClass->asSequence()->first() ) )
+	else
+		Sequence(Class){}
+	endif
+ /]
+
+[**
+ * Returns a sequence of all superclasses of a class, where the sequence starts at the second ancestor.
+ */]
+[query public e_allSuperclassesSecondAncestor(aClass : Class) : Sequence(Class) =
+	if ( aClass.e_allSuperclasses()->size() > 1 ) then
+		aClass.e_allSuperclasses()->subSequence(2, aClass.e_allSuperclasses()->size() )
+	else
+		aClass.e_allSuperclasses()
+	endif
+ /]
+
+[query public e_allSuperDataTypes(aDataType : DataType) : Sequence(DataType) =
+	if ( aDataType.general->notEmpty() ) then
+		aDataType.general->asSequence()
+			->union( e_allSuperDataTypes( aDataType.general->asSequence()->first().oclAsType(DataType) ) )
+	else
+		Sequence(Class){}
+	endif
+ /]
+
+[**
+ * Returns a sequence of all superclasses of a classifier, where the sequence starts at the direct ancestor.
+ * Note: Intended for use with classes and data types. It has not been tested with other classifier types.
+ * @param aClassifier An object of type classifier.
+ */]
+[query public e_allSuperClassifiers(aClassifier : Classifier) : Sequence(Classifier) =
+	if ( aClassifier.general->notEmpty() ) then
+		aClassifier.general->asSequence()
+			->union( e_allSuperClassifiers( aClassifier.general->asSequence()->first() ) )
+	else
+		Sequence(Classifier){}
+	endif
+ /]
+
+[**
+ * IT LOOKS LIKE this behaves the same as e_allSuperclasses, currently only used in the attributes of classes and datatypes 
+ * @param aClass An object of type class.
+ */]
+[query public e_superClassifiers(aClassifier : Classifier) : Sequence(Classifier) =
+	if ( aClassifier.general->notEmpty() ) then
+		aClassifier.general->asSequence()
+			->union( e_superClassifiers( aClassifier.general->asSequence()->first() ) )
+	else
+		Sequence(Classifier){}
+	endif
+ /]
+
+[comment]not used because approach doesn't seem to be necessary[/comment]
+[query public e_allSuperclassesOrDataTypes(aClassifier : Classifier) : Sequence(Classifier) =
+	if ( aClassifier.general->notEmpty() ) then
+		aClassifier.general
+			->select(c:Classifier| c.oclIsTypeOf(Class) or c.oclIsTypeOf(DataType) )
+			->asSequence()
+			->union( e_superClassifiers( aClassifier.general
+				->select(c:Classifier| c.oclIsTypeOf(Class) or c.oclIsTypeOf(DataType) )
+				->asSequence()
+				->first() 
+				) 
+			)
+	else
+		Sequence(Classifier){}
+	endif
+ /]
+
+[**
+ * Returns an ordered set of subclasses of a class, sorted by class name.
+ * @param aClass An object of type class.
+ */]
+[query public e_subClasses(aClass : Class) : OrderedSet(Class) = aClass.eInverse(Class)->sortedBy(name) /]
+
+[**
+ * Returns an ordered set of sub data types of a data type, sorted by data type name.
+ * @param aClass An object of type class.
+ */]
+[query public e_subDataTypes(aDataType : DataType) : OrderedSet(DataType) = aDataType.eInverse(DataType)->sortedBy(name) /]
+[comment][query public e_subClasses(aDataType : DataType) : OrderedSet(DataType) = aDataType.eInverse(DataType)->sortedBy(name) /][/comment]
+
+[**
+ * Returns an ordered set of subclassifiers of a classifier, sorted by classifier name.
+ * @param aClassifier An object of type classifier.
+ */]
+[query public e_subClassifiers(aClassifier : Classifier) : OrderedSet(Classifier) = aClassifier.eInverse(Classifier)->sortedBy(name) /]
+
+[comment]NOT TESTED, not sure if it makes sense[/comment]
+[comment][query public e_subClasses2(aClassifier : Classifier) : Sequence(Classifier) = 
+	aClassifier.eInverse(Class)->asSequence()->union(aClassifier.eInverse(DataType)->asSequence() )
+/][/comment]
+
+[**
+ * Returns an ordered set of classifiers, sorted by classifier name.
+ * Note: Intended for use with classes and data types. It has not been tested with other classifier types.
+ * @param aType An object of type classifier.
+ */]
+[query public e_subClassesOrSubDataTypes(aClassifier : Classifier) : OrderedSet(Classifier) =
+	if ( aClassifier.oclIsTypeOf(Class) ) then
+		aClassifier.eInverse(Class)->asOrderedSet()->sortedBy(name)
+	else if ( aClassifier.oclIsKindOf(DataType) ) then
+		aClassifier.eInverse(DataType)->asOrderedSet()->sortedBy(name)
+	else
+		OrderedSet{}
+	endif endif		
+/]
+
+[query public e_subClassesOrSubDataTypes2(aClassifier : Classifier) : Sequence(Classifier) =
+aClassifier.eInverse(Generalization)
+	->select(specific<>aClassifier)
+	->collect(specific.oclAsType(Classifier))
+	->sortedBy(name)
+/]
+
+[**
+ * Returns a the type name.
+ * This is a workaround for UML primitive names.
+ * @param aType An object of type type.
+ */]
+[query public e_typeName( aType : Type ) : String =
+	if (aType.name->size()>0) then 
+		aType.name
+	else
+		aType.toString().substring(aType.toString().index('#')+1).substitute( ')', '' )
+	endif
+/]
+
+[query public e_typeQualifiedName( aType : Type ) : String =
+	if (aType.name->size()>0) then 
+		aType.qualifiedName
+	else
+		aType.toString().substring(aType.toString().index('#')+1).substitute( ')', '' )
+	endif
+/]
+
+[comment]could be a query, queries get cached[/comment]
+[template public e_simpleQualifiedClassName(aClass : Class) ]
+[aClass._package.name/]::[aClass.name/]
+[/template]
+
+[query public e_simpleQualifiedClassifierName( aClassifier : Classifier ) : String =
+	aClassifier._package.name + '::' + aClassifier.name
+/]
+
+[query public e_contextClasses( aClass : Class ) : OrderedSet(Class) =
+	aClass.eInverse(Association)->collect(ownedEnd->first().type.oclAsType(Class))
+	->union( aClass.eInverse(Association)->collect( ownedEnd->first().getOtherEnd().type.oclAsType(Class) ) )
+	->union( e_allSuperclasses(aClass) )
+	->union( e_allSuperclasses(aClass)->collect( sc : Class | sc.e_limitedAssociations3(aClass) )->collect( ownedEnd->first().type.oclAsType(Class) ) )
+	->union( e_allSuperclasses(aClass)->collect( sc : Class | sc.e_limitedAssociations3(aClass) )->collect( ownedEnd->first().getOtherEnd().type.oclAsType(Class) ) )
+	->union( e_allSubclasses(aClass)->asSequence() )
+	->union( aClass.eInverse(Abstraction).client )
+	->union( aClass.eInverse(Abstraction).supplier )
+	->excluding(aClass)
+	->asOrderedSet()
+	->sortedBy(name)
+/]
+
+[comment][query public e_contextClasses( aClass : Class ) : OrderedSet(Class) =
+	aClass.eInverse(Association)->collect(ownedEnd->first().type.oclAsType(Class))
+	->union( aClass.eInverse(Association)->collect( ownedEnd->first().getOtherEnd().type.oclAsType(Class) ) )
+	->union( e_allSuperclasses(aClass) )
+	->union( e_allSuperclasses(aClass)->collect( e_limitedAssociations() )->collect( ownedEnd->first().type.oclAsType(Class) ) )
+	->union( e_allSuperclasses(aClass)->collect( e_limitedAssociations() )->collect( ownedEnd->first().getOtherEnd().type.oclAsType(Class) ) )
+	->union( e_allSubclasses(aClass)->asSequence() )
+	->union( aClass.eInverse(Abstraction).client )
+	->union( aClass.eInverse(Abstraction).supplier )
+	->excluding(aClass)
+	->asOrderedSet()
+	->sortedBy(name)
+/][/comment]
+
+[query public e_contextClassesOrDataTypes( aDataType : DataType ) : OrderedSet(Classifier) =
+	aDataType.e_dataTypeUseProperties()->collect( owner.oclAsType(Classifier) )
+	->union( e_allSuperDataTypes(aDataType) )
+	->union( e_allSuperDataTypes(aDataType)->collect( e_limitedDataTypeUseProperties() )->collect( owner.oclAsType(Classifier) ) )
+	->union( e_allSubDataTypes(aDataType)->asSequence() )
+	->union( aDataType.eInverse(Abstraction).client )
+	->union( aDataType.eInverse(Abstraction).supplier )
+	->excluding(aDataType)
+	->asOrderedSet()
+	->sortedBy(name)
+/]
+
+
+[comment]
+[for (anAttribute : Property | aDataType.eInverse(Property)->select(association = null)->select(owner<>aDataType) )]
+eInverse(Property)->select(association = null)->select(owner<>aDataType).owner.oclAsType(Classifier)
+[/comment]
+
+[query public Xe_limitedAssociations(aClass : Class) : OrderedSet(Association) =
+	if (aClass.eInverse(Association)->size() > 3 ) then
+		aClass.eInverse(Association)->subOrderedSet(1, 3)
+	else
+		aClass.eInverse(Association)
+	endif
+/]
+
+[**
+ * Returns an ordered set of associations, not between class and superclass, not to any superclasses.
+ * This way Graphviz has less constraints not unnecessary associations paralled to the inheritance path on the 
+ * level of superclasse starting with second ancestor.
+ * 
+ * @param aSuperClass - an object of type class, superclass of aClass.
+ * @param aClass - an object of type class.
+ */]
+[query public e_limitedAssociations2(aSuperClass : Class, aClass : Class) : OrderedSet(Association) =
+	aSuperClass.eInverse(Association)
+	->select( a : Association | a.e_ownedEndClass() <> aClass and a.e_otherEndClass() <> aClass )
+	->select( a : Association | aClass.e_allSuperclasses()->excludes(a.e_ownedEndClass()) or
+		aClass.e_allSuperclasses()->excludes(a.e_otherEndClass()) )
+/]
+
+[query public e_limitedAssociations3(aSuperClass : Class, aClass : Class) : OrderedSet(Association) =
+	if aSuperClass.e_limitedAssociations2(aClass)->size() > 3 then
+		aSuperClass.e_limitedAssociations2(aClass)->subOrderedSet(1, 3)
+	else
+		aSuperClass.e_limitedAssociations2(aClass)
+	endif
+/]
+
+[comment][query public e_limitedAssociations2(aSuperClass : Class, aClass : Class) : OrderedSet(Association) =
+let la : OrderedSet(Association) =
+	aSuperClass.eInverse(Association)
+	->select( a : Association | a.e_ownedEndClass() <> aClass and a.e_otherEndClass() <> aClass )
+	->select( a : Association | aClass.e_allSuperclasses()->excludes(a.e_ownedEndClass()) or
+		aClass.e_allSuperclasses()->excludes(a.e_otherEndClass()) )
+in
+	if la->size() > 3 then
+		la->subOrderedSet(1, 3)
+	else
+		la
+	endif
+/][/comment]
+
+[**
+ * Returns the class of the owned end of an association.
+ * @param aClass An object of type association.
+ */]
+[query public e_ownedEndClass(anAssociation : Association) : Class =
+anAssociation.ownedEnd->first().type.oclAsType(Class)
+/]
+
+[**
+ * Returns owned end of an association.
+ * @param aClass An object of type association.
+ */]
+[query public e_ownedEnd(anAssociation : Association) : Property =
+anAssociation.ownedEnd->first()
+/]
+
+[**
+ * Returns the class of the other end of an association.
+ * @param aClass An object of type association.
+ */]
+[query public e_otherEndClass(anAssociation : Association) : Class =
+	anAssociation.ownedEnd->first().getOtherEnd().type.oclAsType(Class)
+/]
+
+[**
+ * Returns the other end of an association.
+ * @param aClass An object of type association.
+ */]
+[query public e_otherEnd(anAssociation : Association) : Property =
+	anAssociation.ownedEnd->first().getOtherEnd()
+/]
+
+[query public e_dataTypeUseProperties(aDataType : DataType) : OrderedSet(Property) = 
+	aDataType.eInverse(Property)->select(association = null)->select(owner<>aDataType)
+/]
+
+[query public e_limitedDataTypeUseProperties(aDataType : DataType) : OrderedSet(Property) = 
+	if (aDataType.e_dataTypeUseProperties()->size() > 3 ) then
+		aDataType.e_dataTypeUseProperties()->subOrderedSet(1, 3)
+	else
+		aDataType.e_dataTypeUseProperties()
+	endif
+/]
+
+
+[**
+ * Returns an ordered set of all subclasses of a class, sorted by class name.
+ */]
+[query public e_allSubclasses(aClass : Class ) : OrderedSet(Class) =
+	if ( aClass.e_subClasses()->notEmpty() ) then
+		aClass.e_subClasses()
+			->union( aClass.e_subClasses()->collect( e_allSubclasses() )->asBag() )
+			->asOrderedSet()
+	else
+		OrderedSet(Class){}
+	endif
+/]
+[**
+ * Returns an ordered set of all subclasses of a class, sorted by class name.
+ */]
+[query public e_allSubDataTypes(aDataType : DataType ) : OrderedSet(DataType) =
+	if ( aDataType.e_subDataTypes()->notEmpty() ) then
+		aDataType.e_subDataTypes()
+			->union( aDataType.e_subDataTypes()->collect( e_allSubDataTypes() )->asBag() )
+			->asOrderedSet()
+	else
+		OrderedSet(Class){}
+	endif
+/]
+
+[** NONSENSE
+ * Returns an ordered set of all subclassifier of a class, sorted by classifier name.
+ * @param aClass An object of type class.
+ */]
+[query public e_allSubclassifiers(aClassifier : Classifier ) : OrderedSet(Classifier) =
+	if ( aClassifier.e_subClassifiers()->notEmpty() ) then
+		aClassifier.e_subClassifiers()
+			->union( aClassifier.e_subClassifiers()->collect( e_allSubclassifiers() )->asBag() )
+			->asOrderedSet()
+	else
+		OrderedSet(Classifier){}
+	endif
+/]
+
+[**
+ * 
+ * @param aClass 
+ */]
+[query public e_allSubclassesPlusSelf(aClass : Class ) : OrderedSet(Class) =
+	aClass.e_allSubclasses()->union(aClass->asSet())
+		->asOrderedSet()
+		->sortedBy(name)
+/]
+
+[query public e_allSubclassesPlusSelfNonAbstract(aClass : Class ) : OrderedSet(Class) =
+	aClass.e_allSubclassesPlusSelf()
+		->select(c : Class | c.isAbstract=false)
+		->asOrderedSet()
+/]
+
+[query public e_contextPackages( aClass : Class ) : OrderedSet(Package) =
+	e_contextClasses(aClass)->collect(_package)
+	->excluding(aClass._package)
+	->asOrderedSet()
+	->sortedBy(name)
+/]
+
+[query public e_contextPackages( aDataType : DataType ) : OrderedSet(Package) =
+	e_contextClassesOrDataTypes(aDataType)->collect(_package)
+	->excluding(aDataType._package)
+	->asOrderedSet()
+	->sortedBy(name)
+/]
+
+[query public e_shortDocumentation(aNamedElement : NamedElement ) : String =
+	if aNamedElement.ownedComment->isEmpty() then
+		''
+	else
+		let d : String = aNamedElement.ownedComment->asOrderedSet()->first()._body in
+			if d.size() > 100 then
+				d.substring(1, 100) + '\n...'
+			else
+				d
+			endif
+	endif
+/]
+
+[query public e_modelIdentication( aModel : Model ) : DataType =
+    aModel.eAllContents(DataType)->select(name = 'ModelIdentification')->first()
+/]
+
+[query public e_modelShortName( aModel : Model ) : String =
+    aModel.e_modelIdentication().eContents(Property)->select(name='acronym').default +
+		'_' +
+		e_modelIdentication(aModel).eContents(Property)->select(name='majorVersion').default +
+		'-' +
+		e_modelIdentication(aModel).eContents(Property)->select(name='minorVersion').default
+/]
+
+[query public e_modelAcronym( aModel : Model ) : String =
+	e_modelIdentication(aModel).eContents(Property)->select(name='acronym').default + ''
+/]
+
+[query public e_modelLanguage( aModel : Model ) : String =
+	e_modelIdentication(aModel).eContents(Property)->select(name='language').default + ''
+/]
+
+[query public e_modelMajorVersion( aModel : Model ) : String =
+	e_modelIdentication(aModel).eContents(Property)->select(name='majorVersion').default + ''
+/]
+
+[query public e_modelMinorVersion( aModel : Model ) : String =
+	e_modelIdentication(aModel).eContents(Property)->select(name='minorVersion').default + ''
+/]
+
+[query public e_modelUri( aModel : Model ) : String =
+	e_modelIdentication(aModel).eContents(Property)->select(name='uri').default + ''
+/]
+
+[query public e_modelTitle( aModel : Model ) : String =
+	e_modelIdentication(aModel).eContents(Property)->select(name='title').default + ''
+/]
+
+[template public e_onlyDefinition(aNamedElement : NamedElement) post (trim()) ]
+[if (aNamedElement.ownedComment->size()>0)]
+[let s : String = aNamedElement.ownedComment->asSequence()->first()._body.trim().
+	replace('Explanatory notes[\\s\\S\\"=]+', '').
+	replace('Examples[\\s\\S\\"=]+', '').
+	replace('Definition[\\s\\S]+?[\\"=]+\\s+', '').
+	replaceAll('[\\s\\n\\r]+', ' ').
+	replaceAll('\\{', '<U+007B>').
+	replaceAll('\\}', '<U+007D>')
+]
+[comment]
+remove Explanatory notes and further
+remove Examples and further
+remove Definition heading and underline
+replace whitespace with blank
+replace curly brackets with related unicode entities
+[/comment]
+[if (s.size() > 300)]
+[s.first(300).trim()/] ...
+[else]
+[s.trim()/]
+[/if]
+[comment][s.
+	replace('Explanatory notes[\\s\\S\\"=]+', '').
+	replace('Examples[\\s\\S\\"=]+', '').
+	replace('Definition[\\s\\S]+?[\\"=]+\\s+', '').
+	replaceAll('\\{','OPEN').
+	replaceAll('\\}','CLOSE')
+/][/comment]
+[/let]
+[comment][aNamedElement.ownedComment._body.replace('Definition[\\S\\s]+?[\\="]+([\\S\\s]+?)Examples[\\S\\s]+', '$1').trim() /][/comment]
+[/if]
+[/template]
+
+[template public Xe_onlyDefinition(aNamedElement : NamedElement) post (trim()) ]
+[aNamedElement.ownedComment._body.replace('Definition[\\S\\s]+?[\\="]+([\\S\\s]+?)Examples[\\S\\s]+', '$1').trim() /]
+[/template]
+
+[template public e_fixClassDocumentation(aNamedElement : NamedElement) post (trim()) ]
+[aNamedElement.ownedComment._body.toString()/]
+[/template]
+
+[template public Xe_fixClassDocumentation(aNamedElement : NamedElement) post (trim()) ]
+[aNamedElement.ownedComment._body.
+  replace( 'Examples[\\s]+[=]+[\\s]+Explanatory notes', 'Explanatory notes' ).
+  replace( 'Explanatory notes[\\s]+[=]+[\\s]*$', '' )
+/]
+[/template]
+
+[query public e_mappedCdiItemsRdfTokens( anOclAny : OclAny ) : Sequence(String) =
+	getProperty('uml-map-rdf')
+		.replaceAll('\\s+', '')
+		.tokenize(',')
+/]
+
+[query public e_mappedCdiItemsRdf( anOclAny : OclAny ) : Sequence(String) =
+	e_mappedCdiItemsRdfTokens()->collect(tokenize('>')->at(1))
+/]
+
+[query public e_mappedCdiItemsRdfTargets( anOclAny : OclAny ) : Sequence(String) =
+	e_mappedCdiItemsRdfTokens()->collect(tokenize('>')->at(2))
+/]
+
+[**
+ * Determines if the type is a primitive.
+ * @param aType An object of type type.
+ */]
+[query public e_primitive(aType : Type) : Boolean =
+aType.ancestors()->isEmpty()
+/]
+
+[**
+ * Determines if the type is not a primitive.
+ * @param aType An object of type type.
+ */]
+[query public e_notPrimitive(aType : Type) : Boolean =
+aType.ancestors()->notEmpty()
+/]

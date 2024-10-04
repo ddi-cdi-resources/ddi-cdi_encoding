@@ -1,0 +1,12 @@
+@import "common.css";
+
+iframe.cdidoc {
+	height: 80vh;
+	width: 100%;
+}
+
+@media not print {
+	div.highlight {
+		max-height: 20em;
+	}
+}

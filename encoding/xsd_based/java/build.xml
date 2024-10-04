@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ddi-cdi-xmlbeans" default="create-xmlbeans">
+	<!-- xmlbeans location -->
+	<property name="xmlbeans.lib.dir" location="C:/Programs/xmlbeans-5.2.0/lib"/>
+	<!-- Set the classpath -->
+	<path id="build.classpath">
+		<fileset dir="${xmlbeans.lib.dir}">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+	<taskdef name="xmlbeans" classname="org.apache.xmlbeans.impl.tool.XMLBean" classpath="${xmlbeans.lib.dir}/xmlbeans-5.2.0.jar" classpathref="build.classpath"/>
+	<!-- ddi-cdi schema -->
+	<property name="xsd_42" location="../../model_based/xsd_variants/ddi-cdi_42_noXsdTypeInName.xsd"/>
+	<property name="xsd_43" location="../../model_based/xsd_variants/ddi-cdi_43_noXsdTypeInName.xsd"/>
+	<property name="xsd_44" location="../../model_based/xsd_variants/ddi-cdi_44_noXsdTypeInName.xsd"/>
+	<property name="xsd_45" location="../../model_based/xsd_variants/ddi-cdi_45_noXsdTypeInName.xsd"/>
+	<target name="create-xmlbeans">
+		<xmlbeans schema="${xsd_42}" download="true" classpath="ddi-cdi-xmlbeans.jar" srconly="true" srcgendir="xmlbeans_42"/>
+		<xmlbeans schema="${xsd_43}" download="true" classpath="ddi-cdi-xmlbeans.jar" srconly="true" srcgendir="xmlbeans_43"/>
+		<xmlbeans schema="${xsd_44}" download="true" classpath="ddi-cdi-xmlbeans.jar" srconly="true" srcgendir="xmlbeans_44"/>
+		<xmlbeans schema="${xsd_45}" download="true" classpath="ddi-cdi-xmlbeans.jar" srconly="true" srcgendir="xmlbeans_45"/>
+	</target>
+</project>

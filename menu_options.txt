@@ -1,0 +1,6 @@
+menu options
+
+simplemenu works but allows only for a few items (space issue inside the top row, vertically less space)
+menu doesn't work yet but would be the best option (slide out menu with hierarchical items)
+TOC-Progress doesn't work yet. (hierarchical items at the bottom, vertically less space)
+built-in by escape key would be OK but is not great. Doesn't show all.

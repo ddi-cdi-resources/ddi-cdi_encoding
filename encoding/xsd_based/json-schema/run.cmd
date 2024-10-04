@@ -1,0 +1,1 @@
+node ddi-cdi.js > ddi-cdi.schema.json

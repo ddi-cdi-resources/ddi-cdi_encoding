@@ -33,4 +33,4 @@ A code file is generated for C#.
 
 .. container:: font50p
 
-   Source file `ddi-cdi.cs <https://bitbucket.org/wackerow/ddi-cdi_encoding/src/master/encoding/xsd_based/c%23/ddi-cdi_44_noXsdTypeInName.cs>`_
+   Source file `ddi-cdi.cs <https://github.com/ddi-cdi-resources/ddi-cdi_encoding/tree/main/encoding/xsd_based/c%23/ddi-cdi_44_noXsdTypeInName.cs>`_

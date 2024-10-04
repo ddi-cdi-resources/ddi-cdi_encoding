@@ -22,7 +22,7 @@ Windows Batch File
 
 .. container:: font50p
 
-   Source file `run_xsd.cmd <https://bitbucket.org/wackerow/ddi-cdi_encoding/src/master/encoding/xsd_based/c%2B%2B/run_xsd.cmd>`_
+   Source file `run_xsd.cmd <https://github.com/ddi-cdi-resources/ddi-cdi_encoding/tree/main/encoding/xsd_based/c%2B%2B/run_xsd.cmd>`_
 
 Generated Files
 ---------------
@@ -40,7 +40,7 @@ C++ Code File Fragment
 
 .. container:: font50p
 
-   Source file `ddi-cdi.cxx <https://bitbucket.org/wackerow/ddi-cdi_encoding/src/master/encoding/xsd_based/c%2B%2B/ddi-cdi_44_noXsdTypeInName.cxx>`_
+   Source file `ddi-cdi.cxx <https://github.com/ddi-cdi-resources/ddi-cdi_encoding/tree/main/encoding/xsd_based/c%2B%2B/ddi-cdi_44_noXsdTypeInName.cxx>`_
 
 C++ Header File Fragment
 ------------------------
@@ -53,4 +53,4 @@ C++ Header File Fragment
 
 .. container:: font50p
 
-   Source file `ddi-cdi.hxx <https://bitbucket.org/wackerow/ddi-cdi_encoding/src/master/encoding/xsd_based/c%2B%2B/ddi-cdi_44_noXsdTypeInName.hxx>`__
+   Source file `ddi-cdi.hxx <https://github.com/ddi-cdi-resources/ddi-cdi_encoding/tree/main/encoding/xsd_based/c%2B%2B/ddi-cdi_44_noXsdTypeInName.hxx>`__

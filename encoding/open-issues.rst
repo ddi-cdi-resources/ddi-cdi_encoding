@@ -9,3 +9,4 @@ Open Issues
 
 * Pending tests with the various approaches
 * Does the definition of a set of common high-lever functions (get, set, ...) make sense across various encodings?
+* Review of UML Class Model Interoperable Subset (UCMIS)?
